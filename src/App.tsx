@@ -34,7 +34,7 @@ function Layout({ children, path }: { children: React.ReactNode; path: string })
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/devdashboard">
       <Routes>
         <Route path="/" element={<Layout path="/"><Overview /></Layout>} />
         <Route path="/projects" element={<Layout path="/projects"><Projects /></Layout>} />
