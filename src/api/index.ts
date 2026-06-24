@@ -98,6 +98,30 @@ export const server = {
   info: () => request<ServerInfo & { stats: { projects: number; activeTasks: number } }>('/server-info'),
 };
 
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+export interface AppSettings {
+  dashboard_name: string;
+  dashboard_subtitle: string;
+  mc_version: string;
+  server_address: string;
+  server_type: string;
+  java_version: string;
+  os_info: string;
+  cpu_info: string;
+  storage_info: string;
+  ram_max_gb: string;
+  max_players: string;
+  plugins: { name: string; version: string; status: 'enabled' | 'disabled' }[];
+  integrations: { pterodactyl: boolean; mc_ping: boolean };
+}
+
+export const settings = {
+  get: () => request<AppSettings>('/settings'),
+  update: (data: Partial<AppSettings>) =>
+    request<AppSettings>('/settings', { method: 'PUT', body: JSON.stringify(data) }),
+};
+
 // ── Users (admin) ─────────────────────────────────────────────────────────────
 
 export const users = {

@@ -187,3 +187,36 @@ if (userCount === 0) {
 
   console.log('✅ Seed terminé. Compte admin: LeVraiMattok / Admin@RebornMC2026!');
 }
+
+// ── Server config seed ────────────────────────────────────────────────────────
+
+const configCount = (db.prepare('SELECT COUNT(*) as n FROM server_config').get() as { n: number }).n;
+
+if (configCount === 0) {
+  const set = db.prepare('INSERT INTO server_config (key, value) VALUES (?, ?)');
+  db.transaction(() => {
+    set.run('dashboard_name',     'REBORNMC');
+    set.run('dashboard_subtitle', 'Dev Dashboard');
+    set.run('mc_version',         '1.21.8');
+    set.run('server_address',     'play.rebornmc.fr');
+    set.run('server_type',        'Paper 1.21.8-#100');
+    set.run('java_version',       'OpenJDK 21.0.5');
+    set.run('os_info',            'Ubuntu 24.04 LTS');
+    set.run('cpu_info',           '8 vCPU @ 3.6GHz');
+    set.run('storage_info',       '200 GB SSD NVMe');
+    set.run('ram_max_gb',         '16');
+    set.run('max_players',        '200');
+    set.run('plugins', JSON.stringify([
+      { name: 'RebornCore',    status: 'enabled',  version: '3.2.1'   },
+      { name: 'RebornPvP',     status: 'enabled',  version: '1.4.0'   },
+      { name: 'RebornEconomy', status: 'enabled',  version: '2.1.3'   },
+      { name: 'RebornWorlds',  status: 'enabled',  version: '0.8.2'   },
+      { name: 'RebornGuard',   status: 'enabled',  version: '4.0.1'   },
+      { name: 'RebornQuests',  status: 'disabled', version: '0.2.0'   },
+      { name: 'LuckPerms',     status: 'enabled',  version: '5.4.145' },
+      { name: 'Vault',         status: 'enabled',  version: '1.7.3'   },
+      { name: 'WorldEdit',     status: 'enabled',  version: '7.3.5'   },
+      { name: 'WorldGuard',    status: 'enabled',  version: '7.0.11'  },
+    ]));
+  })();
+}

@@ -50,7 +50,7 @@ router.post('/', requireRole('admin'), (req, res) => {
 });
 
 router.put('/:id', requireRole('admin'), (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params['id'] as string);
   const { username, email, password, role, display_role, avatar, color } =
     req.body as { username?: string; email?: string; password?: string; role?: string; display_role?: string; avatar?: string; color?: string };
 
@@ -77,7 +77,7 @@ router.put('/:id', requireRole('admin'), (req, res) => {
 });
 
 router.delete('/:id', requireRole('admin'), (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params['id'] as string);
   if (id === req.user!.id) {
     res.status(400).json({ error: 'Impossible de supprimer votre propre compte' }); return;
   }

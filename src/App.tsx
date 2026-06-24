@@ -10,6 +10,7 @@ import { Changelog } from './pages/Changelog';
 import { Team } from './pages/Team';
 import { ServerStatus } from './pages/ServerStatus';
 import { UserManagement } from './pages/UserManagement';
+import { Settings } from './pages/Settings';
 
 const pageConfig: Record<string, { title: string; subtitle: string }> = {
   '/':          { title: 'Vue d\'ensemble', subtitle: 'Tableau de bord REBORNMC · Minecraft 1.21.8 Java' },
@@ -19,6 +20,7 @@ const pageConfig: Record<string, { title: string; subtitle: string }> = {
   '/team':      { title: 'Équipe', subtitle: 'Membres de l\'équipe de développement' },
   '/server':    { title: 'Serveur', subtitle: 'Statut et métriques du serveur en temps réel' },
   '/users':     { title: 'Utilisateurs', subtitle: 'Gestion des comptes — Administration' },
+  '/settings':  { title: 'Paramètres',   subtitle: 'Configuration du dashboard' },
 };
 
 function Layout({ children, path }: { children: React.ReactNode; path: string }) {
@@ -47,7 +49,8 @@ export default function App() {
         <Route path="/changelog" element={<ProtectedRoute><Layout path="/changelog"><Changelog /></Layout></ProtectedRoute>} />
         <Route path="/team" element={<ProtectedRoute><Layout path="/team"><Team /></Layout></ProtectedRoute>} />
         <Route path="/server" element={<ProtectedRoute><Layout path="/server"><ServerStatus /></Layout></ProtectedRoute>} />
-        <Route path="/users" element={<ProtectedRoute roles={['admin']}><Layout path="/users"><UserManagement /></Layout></ProtectedRoute>} />
+        <Route path="/users"    element={<ProtectedRoute roles={['admin']}><Layout path="/users"><UserManagement /></Layout></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute roles={['admin']}><Layout path="/settings"><Settings /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
