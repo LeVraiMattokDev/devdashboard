@@ -37,6 +37,7 @@ const CACHE_TTL = 30_000;
 interface PtData {
   current_state: string;
   resources: { memory_bytes: number; cpu_absolute: number; disk_bytes: number; uptime: number };
+  limits: { memory: number; cpu: number }; // MB / %, 0 = unlimited
 }
 
 async function fetchPterodactyl(): Promise<PtData | null> {
@@ -48,13 +49,25 @@ async function fetchPterodactyl(): Promise<PtData | null> {
   if (ptCache && Date.now() - ptCache.at < CACHE_TTL) return ptCache.data;
 
   try {
-    const r = await fetch(`${url}/api/client/servers/${sid}/resources`, {
-      headers: { Authorization: `Bearer ${key}`, Accept: 'application/json' },
-    });
-    if (!r.ok) return null;
-    const body = await r.json() as { attributes: PtData };
-    ptCache = { data: body.attributes, at: Date.now() };
-    return body.attributes;
+    const headers = { Authorization: `Bearer ${key}`, Accept: 'application/json' };
+    const [detailsRes, resourcesRes] = await Promise.all([
+      fetch(`${url}/api/client/servers/${sid}`, { headers }),
+      fetch(`${url}/api/client/servers/${sid}/resources`, { headers }),
+    ]);
+    if (!detailsRes.ok || !resourcesRes.ok) return null;
+
+    const [details, resources] = await Promise.all([
+      detailsRes.json() as Promise<{ attributes: { limits: { memory: number; cpu: number } } }>,
+      resourcesRes.json() as Promise<{ attributes: { current_state: string; resources: PtData['resources'] } }>,
+    ]);
+
+    const data: PtData = {
+      current_state: resources.attributes.current_state,
+      resources: resources.attributes.resources,
+      limits: details.attributes.limits,
+    };
+    ptCache = { data, at: Date.now() };
+    return data;
   } catch {
     return null;
   }
@@ -181,14 +194,13 @@ router.get('/server-info', async (_req, res) => {
   const ramMaxGb = parseFloat(String(cfg.ram_max_gb ?? '16'));
   const maxPlayers = parseInt(String(cfg.max_players ?? '200'), 10);
 
-  // Fetch live data from Pterodactyl
   const pt = await fetchPterodactyl();
-  // Fetch player count via Minecraft SLP
   const slp = await fetchSlp();
 
   let status: 'online' | 'offline' | 'maintenance' = 'online';
-  let ram = { used: 0, max: ramMaxGb };
+  let ram: { used: number; max: number | null } = { used: 0, max: ramMaxGb };
   let cpu = 0;
+  let cpuMax: number | null = null;
   let disk = 0;
   let uptime = '—';
   let players = { current: slp?.online ?? 0, max: slp?.max ?? maxPlayers };
@@ -196,11 +208,13 @@ router.get('/server-info', async (_req, res) => {
   if (pt) {
     const state = pt.current_state;
     status = state === 'running' ? 'online' : state === 'offline' ? 'offline' : 'maintenance';
+    const ramLimitGb = pt.limits.memory === 0 ? null : Math.round(pt.limits.memory / 1024 * 10) / 10;
     ram = {
       used: Math.round((pt.resources.memory_bytes / 1_073_741_824) * 10) / 10,
-      max: ramMaxGb,
+      max: ramLimitGb,
     };
     cpu = Math.round(pt.resources.cpu_absolute * 10) / 10;
+    cpuMax = pt.limits.cpu === 0 ? null : pt.limits.cpu;
     disk = Math.round((pt.resources.disk_bytes / 1_073_741_824) * 10) / 10;
     uptime = formatUptime(pt.resources.uptime);
     if (!slp) players = { current: 0, max: maxPlayers };
@@ -215,13 +229,12 @@ router.get('/server-info', async (_req, res) => {
     cpuInfo:      cfg.cpu_info          ?? '8 vCPU',
     storageInfo:  cfg.storage_info      ?? '200 GB SSD',
     address:      cfg.server_address    ?? 'play.rebornmc.fr',
-    plugins:      cfg.plugins           ?? [],
     status,
     players,
     uptime,
-    tps: pt ? null : 19.8,
     ram,
     cpu,
+    cpuMax,
     disk,
     hasPterodactyl: !!pt,
     hasMcPing: !!slp,
