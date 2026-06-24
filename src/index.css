@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #0D1117;
+  color: #E6EDF3;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Minecraft-style scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #161B22;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363D;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5DA832;
+}
+
+/* Pixel border utility */
+.pixel-border {
+  border: 2px solid;
+  image-rendering: pixelated;
+}
+
+/* MC button style */
+.mc-btn {
+  @apply px-4 py-2 font-bold text-sm border-2 cursor-pointer transition-all duration-100 select-none;
+  border-bottom-color: rgba(0,0,0,0.5);
+  border-right-color: rgba(0,0,0,0.5);
+  border-top-color: rgba(255,255,255,0.2);
+  border-left-color: rgba(255,255,255,0.2);
+}
+
+.mc-btn:active {
+  border-top-color: rgba(0,0,0,0.5);
+  border-left-color: rgba(0,0,0,0.5);
+  border-bottom-color: rgba(255,255,255,0.2);
+  border-right-color: rgba(255,255,255,0.2);
+  transform: translateY(1px);
+}
+
+/* Animated gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #5DA832, #3EEEFF, #FFAA00);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: var(--progress); }
+}
+
+.progress-fill {
+  animation: progressFill 1s ease-out forwards;
+}
+
+/* Card hover effect */
+.mc-card {
+  @apply rounded-none border transition-all duration-200;
+  border-color: #30363D;
+  background: #161B22;
+}
+
+.mc-card:hover {
+  border-color: #5DA832;
+  box-shadow: 0 0 0 1px #5DA832, 0 4px 24px rgba(93,168,50,0.15);
+}
+
+/* Status badge */
+.status-online {
+  @apply bg-mc-green text-white;
+}
+.status-warning {
+  @apply bg-mc-gold text-black;
+}
+.status-error {
+  @apply bg-mc-redstone text-white;
+}
+.status-idle {
+  @apply bg-mc-stone text-white;
+}
+
+/* Pixel scan line overlay */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+}
