@@ -47,6 +47,9 @@ export const auth = {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
+
+  updateProfile: (data: { avatar: string }) =>
+    request<AuthUser>('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
 };
 
 // ── Projects ──────────────────────────────────────────────────────────────────

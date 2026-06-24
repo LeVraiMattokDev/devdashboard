@@ -1,7 +1,8 @@
-import { LogOut, KeyRound } from 'lucide-react';
+import { LogOut, KeyRound, UserCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../api';
+import { Avatar } from './Avatar';
 
 interface HeaderProps {
   title: string;
@@ -37,7 +38,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#161B22] border border-[#30363D] rounded w-full max-w-sm p-6">
+      <div className="bg-[#161B22] border border-[#30363D] rounded-lg w-full max-w-sm p-6 shadow-2xl">
         <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
           <KeyRound size={15} className="text-mc-gold" />
           Changer le mot de passe
@@ -78,10 +79,85 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function EditProfileModal({ onClose }: { onClose: () => void }) {
+  const { user, updateUser } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar ?? '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  if (!user) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true); setError('');
+    try {
+      const updated = await auth.updateProfile({ avatar: avatarUrl.trim() });
+      updateUser({ avatar: updated.avatar });
+      setDone(true);
+      setTimeout(onClose, 800);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erreur');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#161B22] border border-[#30363D] rounded-lg w-full max-w-sm p-6 shadow-2xl">
+        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <UserCircle size={15} className="text-mc-green" />
+          Photo de profil
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Live preview */}
+          <div className="flex items-center gap-4 p-3 bg-[#0D1117] rounded-lg border border-[#21262D]">
+            <Avatar value={avatarUrl || user.avatar} color={user.color} size={52} />
+            <div>
+              <div className="text-white font-medium text-sm">{user.username}</div>
+              <div className="text-xs text-[#7D8590]">{user.displayRole || user.role}</div>
+            </div>
+          </div>
+
+          {/* URL input */}
+          <div>
+            <label className="text-xs text-[#7D8590] mb-1 block">URL de la photo</label>
+            <input
+              value={avatarUrl}
+              onChange={e => setAvatarUrl(e.target.value)}
+              placeholder="https://example.com/photo.jpg"
+              className="w-full bg-[#0D1117] border border-[#30363D] text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-mc-green transition-colors placeholder-[#3D444D]"
+            />
+            <p className="text-[10px] text-[#3D444D] mt-1.5">
+              Laissez vide pour afficher vos initiales
+            </p>
+          </div>
+
+          {error && <p className="text-mc-redstone text-xs">{error}</p>}
+          {done && <p className="text-mc-green text-xs">Profil mis à jour !</p>}
+
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 px-4 py-2 bg-[#21262D] text-[#7D8590] rounded-md text-sm hover:text-white transition-colors">
+              Annuler
+            </button>
+            <button type="submit" disabled={loading}
+              className="flex-1 px-4 py-2 bg-mc-green text-white rounded-md text-sm font-medium hover:bg-[#4a8a26] transition-colors disabled:opacity-50">
+              {loading ? '...' : 'Sauvegarder'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function Header({ title, subtitle }: HeaderProps) {
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   const initials = user?.username.slice(0, 2).toUpperCase() ?? '??';
 
@@ -101,20 +177,29 @@ export function Header({ title, subtitle }: HeaderProps) {
 
           <button
             onClick={() => setShowMenu(v => !v)}
-            className="w-8 h-8 flex items-center justify-center rounded text-white text-xs font-bold shadow-mc-inset"
-            style={{ backgroundColor: user.color, border: `2px solid ${user.color}80` }}
+            className="flex-shrink-0 rounded overflow-hidden"
+            style={{ outline: `2px solid ${user.color}60` }}
           >
-            {user.avatar || initials}
+            <Avatar value={user.avatar || initials} color={user.color} size={32} />
           </button>
 
           {showMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-10 z-50 bg-[#161B22] border border-[#30363D] rounded shadow-xl w-44 overflow-hidden">
-                <div className="px-3 py-2 border-b border-[#21262D]">
-                  <div className="text-white text-xs font-semibold">{user.username}</div>
-                  <div className="text-[#7D8590] text-xs">{user.role}</div>
+              <div className="absolute right-0 top-10 z-50 bg-[#161B22] border border-[#30363D] rounded-lg shadow-xl w-48 overflow-hidden">
+                <div className="px-3 py-2.5 border-b border-[#21262D] flex items-center gap-2.5">
+                  <Avatar value={user.avatar || initials} color={user.color} size={28} />
+                  <div>
+                    <div className="text-white text-xs font-semibold">{user.username}</div>
+                    <div className="text-[#7D8590] text-[10px]">{user.role}</div>
+                  </div>
                 </div>
+                <button
+                  onClick={() => { setShowEditProfile(true); setShowMenu(false); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#7D8590] hover:text-white hover:bg-[#21262D] transition-colors"
+                >
+                  <UserCircle size={13} /> Photo de profil
+                </button>
                 <button
                   onClick={() => { setShowChangePw(true); setShowMenu(false); }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#7D8590] hover:text-white hover:bg-[#21262D] transition-colors"
@@ -134,6 +219,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       )}
 
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
+      {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
     </header>
   );
 }

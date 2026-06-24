@@ -60,6 +60,16 @@ router.get('/me', requireAuth, (req, res) => {
   });
 });
 
+router.put('/profile', requireAuth, (req, res) => {
+  const { avatar } = req.body as { avatar?: string };
+  db.prepare("UPDATE users SET avatar = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(avatar ?? '', req.user!.id);
+  const u = db.prepare(
+    'SELECT id, username, role, display_role, avatar, color, must_change_pw FROM users WHERE id = ?'
+  ).get(req.user!.id) as { id: number; username: string; role: string; display_role: string; avatar: string; color: string; must_change_pw: number };
+  res.json({ id: u.id, username: u.username, role: u.role, displayRole: u.display_role, avatar: u.avatar, color: u.color, mustChangePw: u.must_change_pw === 1 });
+});
+
 router.post('/change-password', requireAuth, (req, res) => {
   const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
   if (!currentPassword || !newPassword) {

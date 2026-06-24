@@ -4,6 +4,7 @@ import {
   Calendar, Search,
 } from 'lucide-react';
 import { tasks as tasksApi, projects as projectsApi, team as teamApi } from '../api';
+import { Avatar } from '../components/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import type { Task, TaskStatus, Priority, Project, TeamMember } from '../types';
 
@@ -185,8 +186,7 @@ function DetailModal({ task, members, canEdit, onEdit, onDelete, onClose }: {
               <div className="bg-[#0D1117] rounded-md p-3 border border-[#21262D]">
                 <div className="text-[10px] text-[#7D8590] uppercase tracking-wider mb-1">Assigné à</div>
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded text-[9px] font-bold flex items-center justify-center"
-                    style={{ backgroundColor: `${assignee.color}25`, color: assignee.color }}>{assignee.avatar}</div>
+                  <Avatar value={assignee.avatar} color={assignee.color} size={20} />
                   <span className="text-sm text-white">{assignee.name}</span>
                 </div>
               </div>
@@ -287,12 +287,7 @@ function TaskCard({ task, members, canEdit, isDragging, onDragStart, onDragEnd, 
                 <Calendar size={10} />{fmtDate(task.dueDate)}
               </span>
             )}
-            {assignee && (
-              <div className="w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold flex-shrink-0"
-                style={{ backgroundColor: `${assignee.color}25`, border: `1px solid ${assignee.color}50`, color: assignee.color }}>
-                {assignee.avatar}
-              </div>
-            )}
+            {assignee && <Avatar value={assignee.avatar} color={assignee.color} size={20} />}
           </div>
         </div>
       </div>

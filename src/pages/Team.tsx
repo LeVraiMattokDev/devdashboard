@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, Code } from 'lucide-react';
 import { team as teamApi } from '../api';
+import { Avatar } from '../components/Avatar';
 import type { TeamMember } from '../types';
 
 export function Team() {
@@ -17,10 +18,7 @@ export function Team() {
           <div key={member.id} className="mc-card p-5">
             {/* Avatar + name */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded flex items-center justify-center text-lg font-bold flex-shrink-0"
-                style={{ backgroundColor: `${member.color}20`, color: member.color, border: `2px solid ${member.color}50` }}>
-                {member.avatar}
-              </div>
+              <Avatar value={member.avatar} color={member.color} size={56} />
               <div>
                 <h3 className="text-white font-bold text-base">{member.name}</h3>
                 <span className="text-xs px-2 py-0.5 rounded" style={{ color: member.color, backgroundColor: `${member.color}20`, border: `1px solid ${member.color}40` }}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, X, ShieldCheck, Eye, UserCheck } from 'lucide-react';
 import { users as usersApi } from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import { Avatar } from '../components/Avatar';
 import type { AppUser } from '../types';
 
 const roleOptions = ['admin', 'developer', 'viewer'];
@@ -77,17 +78,26 @@ function UserFormModal({ initial, title, isNew, onSave, onClose }: {
                 placeholder="ex: Développeur Senior"
                 className="w-full bg-[#0D1117] border border-[#30363D] text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-mc-green" />
             </div>
-            <div>
-              <label className="text-xs text-[#7D8590] block mb-1">Avatar (2 chars)</label>
-              <div className="flex gap-1.5 flex-wrap">
-                {avatarOptions.map(a => (
-                  <button type="button" key={a} onClick={() => set('avatar', a)}
-                    className={`px-2 py-1 rounded text-xs font-bold transition-colors ${form.avatar === a ? 'bg-mc-green text-white' : 'bg-[#0D1117] text-[#7D8590] border border-[#30363D] hover:border-mc-green'}`}>
-                    {a}
-                  </button>
-                ))}
-                <input value={form.avatar} onChange={e => set('avatar', e.target.value.slice(0, 2).toUpperCase())}
-                  maxLength={2} placeholder="??" className="w-12 bg-[#0D1117] border border-[#30363D] text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-mc-green text-center" />
+            <div className="col-span-2">
+              <label className="text-xs text-[#7D8590] block mb-2">Photo de profil</label>
+              <div className="flex gap-3 items-start">
+                <Avatar value={form.avatar} color={form.color} size={48} />
+                <div className="flex-1 space-y-2">
+                  <input
+                    value={form.avatar}
+                    onChange={e => set('avatar', e.target.value)}
+                    placeholder="https://... ou initiales (ex: LM)"
+                    className="w-full bg-[#0D1117] border border-[#30363D] text-white rounded px-3 py-2 text-sm focus:outline-none focus:border-mc-green"
+                  />
+                  <div className="flex gap-1 flex-wrap">
+                    {avatarOptions.map(a => (
+                      <button type="button" key={a} onClick={() => set('avatar', a)}
+                        className={`px-1.5 py-0.5 rounded text-xs font-bold transition-colors ${form.avatar === a ? 'bg-mc-green text-white' : 'bg-[#0D1117] text-[#7D8590] border border-[#30363D] hover:border-mc-green'}`}>
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
             <div>
@@ -197,10 +207,7 @@ export function UserManagement() {
                 <tr key={u.id} className="border-b border-[#21262D] hover:bg-[#161B22] transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded text-xs font-bold flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${u.color}20`, color: u.color, border: `1px solid ${u.color}40` }}>
-                        {u.avatar}
-                      </div>
+                      <Avatar value={u.avatar} color={u.color} size={32} />
                       <div>
                         <div className="text-white font-medium">{u.username}</div>
                         {u.display_role && <div className="text-xs text-[#7D8590]">{u.display_role}</div>}
