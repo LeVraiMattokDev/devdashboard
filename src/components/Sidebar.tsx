@@ -1,19 +1,26 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, ListTodo, BookOpen,
-  Users, Server, ChevronRight, Sword
+  Users, Server, ChevronRight, Sword, UserCog
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Vue d\'ensemble' },
-  { to: '/projects', icon: FolderKanban, label: 'Projets' },
-  { to: '/tasks', icon: ListTodo, label: 'Tâches' },
-  { to: '/changelog', icon: BookOpen, label: 'Changelog' },
-  { to: '/team', icon: Users, label: 'Équipe' },
-  { to: '/server', icon: Server, label: 'Serveur' },
+  { to: '/', icon: LayoutDashboard, label: 'Vue d\'ensemble', roles: null },
+  { to: '/projects', icon: FolderKanban, label: 'Projets', roles: null },
+  { to: '/tasks', icon: ListTodo, label: 'Tâches', roles: null },
+  { to: '/changelog', icon: BookOpen, label: 'Changelog', roles: null },
+  { to: '/team', icon: Users, label: 'Équipe', roles: null },
+  { to: '/server', icon: Server, label: 'Serveur', roles: null },
+];
+
+const adminItems = [
+  { to: '/users', icon: UserCog, label: 'Utilisateurs', roles: ['admin'] },
 ];
 
 export function Sidebar() {
+  const { user } = useAuth();
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-[#0D1117] border-r border-[#21262D] flex flex-col z-50">
       {/* Logo */}
@@ -65,6 +72,36 @@ export function Sidebar() {
             </li>
           ))}
         </ul>
+
+        {user?.role === 'admin' && (
+          <>
+            <p className="text-[#7D8590] text-xs font-semibold tracking-widest px-3 mt-6 mb-3 uppercase">Administration</p>
+            <ul className="space-y-1">
+              {adminItems.map(({ to, icon: Icon, label }) => (
+                <li key={to}>
+                  <NavLink
+                    to={to}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-all duration-150 group
+                      ${isActive
+                        ? 'bg-[#1C2128] text-white border border-[#30363D] shadow-inner'
+                        : 'text-[#7D8590] hover:text-white hover:bg-[#161B22]'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Icon size={16} className={isActive ? 'text-mc-gold' : 'group-hover:text-mc-gold transition-colors'} />
+                        <span>{label}</span>
+                        {isActive && <ChevronRight size={14} className="ml-auto text-mc-gold" />}
+                      </>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </nav>
 
       {/* Footer */}

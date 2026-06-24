@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Server, Users, Cpu, HardDrive, Zap, Clock, Activity, RefreshCw, Wifi } from 'lucide-react';
-import { serverInfo } from '../data';
+import { server as serverApi } from '../api';
 import { ProgressBar } from '../components/ProgressBar';
 
 function MetricCard({ icon: Icon, label, value, unit, color, sub }: {
@@ -34,9 +34,22 @@ const plugins = [
   { name: 'WorldGuard', status: 'enabled', version: '7.0.11' },
 ];
 
+type ServerData = {
+  name: string; version: string; status: string;
+  players: { current: number; max: number };
+  tps: number; uptime: string;
+  ram: { used: number; max: number };
+  stats?: { projects: number; activeTasks: number };
+};
+
 export function ServerStatus() {
-  const [tps, setTps] = useState(serverInfo.tps);
+  const [data, setData] = useState<ServerData | null>(null);
+  const [tps, setTps] = useState(19.8);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  useEffect(() => {
+    serverApi.info().then(d => { setData(d); setTps(d.tps); }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,8 +59,8 @@ export function ServerStatus() {
     return () => clearInterval(interval);
   }, []);
 
-  const ramPercent = Math.round((serverInfo.ram.used / serverInfo.ram.max) * 100);
-  const playerPercent = Math.round((serverInfo.players.current / serverInfo.players.max) * 100);
+  const ramPercent = data ? Math.round((data.ram.used / data.ram.max) * 100) : 0;
+  const playerPercent = data ? Math.round((data.players.current / data.players.max) * 100) : 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -64,7 +77,7 @@ export function ServerStatus() {
               EN LIGNE
             </span>
           </div>
-          <div className="text-[#7D8590] text-sm">Minecraft Java Edition · {serverInfo.version} · Spigot/Paper</div>
+          <div className="text-[#7D8590] text-sm">Minecraft Java Edition · {data?.version ?? '1.21.8'} · Spigot/Paper</div>
         </div>
         <div className="text-right hidden md:block">
           <div className="text-xs text-[#7D8590] flex items-center gap-1.5 justify-end">
@@ -80,10 +93,10 @@ export function ServerStatus() {
 
       {/* Key metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard icon={Users} label="Joueurs" value={serverInfo.players.current} unit={`/ ${serverInfo.players.max}`} color="#5DA832" sub={`${playerPercent}% capacité`} />
+        <MetricCard icon={Users} label="Joueurs" value={data?.players.current ?? 0} unit={`/ ${data?.players.max ?? 200}`} color="#5DA832" sub={`${playerPercent}% capacité`} />
         <MetricCard icon={Activity} label="TPS" value={tps.toFixed(1)} unit="/ 20" color={tps > 19 ? '#5DA832' : tps > 17 ? '#FFAA00' : '#CC0000'} sub={tps > 19 ? 'Excellent' : tps > 17 ? 'Correct' : 'Dégradé'} />
-        <MetricCard icon={HardDrive} label="RAM" value={serverInfo.ram.used} unit={`/ ${serverInfo.ram.max} GB`} color="#3EEEFF" sub={`${ramPercent}% utilisé`} />
-        <MetricCard icon={Clock} label="Uptime" value={serverInfo.uptime} color="#FFAA00" sub="depuis dernier redémarrage" />
+        <MetricCard icon={HardDrive} label="RAM" value={data?.ram.used ?? 0} unit={`/ ${data?.ram.max ?? 16} GB`} color="#3EEEFF" sub={`${ramPercent}% utilisé`} />
+        <MetricCard icon={Clock} label="Uptime" value={data?.uptime ?? '—'} color="#FFAA00" sub="depuis dernier redémarrage" />
       </div>
 
       {/* RAM + Players bars */}
@@ -95,8 +108,8 @@ export function ServerStatus() {
           </div>
           <ProgressBar value={ramPercent} size="md" color="#3EEEFF" />
           <div className="flex justify-between text-xs text-[#7D8590] mt-2">
-            <span>Utilisé: {serverInfo.ram.used} GB</span>
-            <span>Total: {serverInfo.ram.max} GB</span>
+            <span>Utilisé: {data?.ram.used ?? 0} GB</span>
+            <span>Total: {data?.ram.max ?? 16} GB</span>
           </div>
         </div>
         <div className="mc-card p-5">
@@ -106,8 +119,8 @@ export function ServerStatus() {
           </div>
           <ProgressBar value={playerPercent} size="md" color="#5DA832" />
           <div className="flex justify-between text-xs text-[#7D8590] mt-2">
-            <span>En ligne: {serverInfo.players.current}</span>
-            <span>Maximum: {serverInfo.players.max}</span>
+            <span>En ligne: {data?.players.current ?? 0}</span>
+            <span>Maximum: {data?.players.max ?? 200}</span>
           </div>
         </div>
       </div>
@@ -124,9 +137,7 @@ export function ServerStatus() {
             <div key={plugin.name}
               className="flex items-center gap-3 p-3 bg-[#0D1117] rounded border border-[#21262D] hover:border-[#30363D] transition-colors">
               <div className={`w-2 h-2 rounded-sm flex-shrink-0 ${plugin.status === 'enabled' ? 'bg-mc-green' : 'bg-[#3D444D]'}`} />
-              <span className={`text-sm font-medium flex-1 ${plugin.status === 'enabled' ? 'text-white' : 'text-[#3D444D]'}`}>
-                {plugin.name}
-              </span>
+              <span className={`text-sm font-medium flex-1 ${plugin.status === 'enabled' ? 'text-white' : 'text-[#3D444D]'}`}>{plugin.name}</span>
               <span className="text-xs font-mono text-[#7D8590]">v{plugin.version}</span>
             </div>
           ))}

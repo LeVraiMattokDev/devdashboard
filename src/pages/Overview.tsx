@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Server, Code, CheckCircle, AlertTriangle, TrendingUp, Users, Cpu, HardDrive, Zap, Clock } from 'lucide-react';
-import { projects, serverInfo, teamMembers, changelog } from '../data';
+import { projects as projectsApi, server as serverApi, team as teamApi, changelog as changelogApi } from '../api';
+import type { Project, ChangelogEntry, TeamMember } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { ProgressBar } from '../components/ProgressBar';
 
@@ -20,12 +22,26 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   );
 }
 
+type ServerData = { players: { current: number; max: number }; ram: { used: number; max: number }; tps: number; uptime: string; version: string };
+
 export function Overview() {
-  const allTasks = projects.flatMap(p => p.tasks);
+  const [projectList, setProjects] = useState<Project[]>([]);
+  const [serverData, setServer] = useState<ServerData | null>(null);
+  const [teamData, setTeam] = useState<TeamMember[]>([]);
+  const [changelogData, setChangelog] = useState<ChangelogEntry[]>([]);
+
+  useEffect(() => {
+    projectsApi.list().then(setProjects).catch(() => {});
+    serverApi.info().then(setServer).catch(() => {});
+    teamApi.list().then(setTeam).catch(() => {});
+    changelogApi.list().then(setChangelog).catch(() => {});
+  }, []);
+
+  const activeProjects = projectList.filter(p => p.status === 'active' || p.status === 'in-progress').length;
+  const allTasks = projectList.flatMap(p => p.tasks ?? []);
   const activeTasks = allTasks.filter(t => t.status === 'in-progress').length;
   const doneTasks = allTasks.filter(t => t.status === 'done').length;
   const criticalTasks = allTasks.filter(t => t.priority === 'critical' && t.status !== 'done').length;
-  const activeProjects = projects.filter(p => p.status === 'active' || p.status === 'in-progress').length;
 
   return (
     <div className="p-6 space-y-6">
@@ -45,10 +61,10 @@ export function Overview() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Code} label="Projets actifs" value={activeProjects} sub={`sur ${projects.length} total`} color="#5DA832" />
+        <StatCard icon={Code} label="Projets actifs" value={activeProjects} sub={`sur ${projectList.length} total`} color="#5DA832" />
         <StatCard icon={CheckCircle} label="Tâches terminées" value={doneTasks} sub={`sur ${allTasks.length} total`} color="#3EEEFF" />
         <StatCard icon={AlertTriangle} label="Tâches critiques" value={criticalTasks} sub="à traiter" color="#CC0000" />
-        <StatCard icon={Users} label="Membres équipe" value={teamMembers.length} sub="développeurs" color="#FFAA00" />
+        <StatCard icon={Users} label="Membres équipe" value={teamData.length} sub="développeurs" color="#FFAA00" />
       </div>
 
       {/* Server status + recent activity */}
@@ -60,31 +76,35 @@ export function Overview() {
             <h3 className="text-white font-semibold">Statut Serveur</h3>
             <span className="ml-auto text-xs bg-mc-green/20 text-mc-green px-2 py-0.5 rounded border border-mc-green/30">EN LIGNE</span>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#7D8590] flex items-center gap-2"><Users size={13} />Joueurs</span>
-              <span className="text-white font-mono">{serverInfo.players.current}<span className="text-[#3D444D]">/{serverInfo.players.max}</span></span>
-            </div>
-            <div>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-[#7D8590] flex items-center gap-2"><HardDrive size={13} />RAM</span>
-                <span className="text-white font-mono">{serverInfo.ram.used}GB / {serverInfo.ram.max}GB</span>
+          {serverData ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#7D8590] flex items-center gap-2"><Users size={13} />Joueurs</span>
+                <span className="text-white font-mono">{serverData.players.current}<span className="text-[#3D444D]">/{serverData.players.max}</span></span>
               </div>
-              <ProgressBar value={Math.round((serverInfo.ram.used / serverInfo.ram.max) * 100)} showLabel={false} size="sm" color="#3EEEFF" />
+              <div>
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-[#7D8590] flex items-center gap-2"><HardDrive size={13} />RAM</span>
+                  <span className="text-white font-mono">{serverData.ram.used}GB / {serverData.ram.max}GB</span>
+                </div>
+                <ProgressBar value={Math.round((serverData.ram.used / serverData.ram.max) * 100)} showLabel={false} size="sm" color="#3EEEFF" />
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#7D8590] flex items-center gap-2"><Cpu size={13} />TPS</span>
+                <span className="text-mc-green font-mono font-bold">{serverData.tps} / 20</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#7D8590] flex items-center gap-2"><Clock size={13} />Uptime</span>
+                <span className="text-white font-mono">{serverData.uptime}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#7D8590] flex items-center gap-2"><Zap size={13} />Version</span>
+                <span className="text-mc-diamond font-mono">{serverData.version}</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#7D8590] flex items-center gap-2"><Cpu size={13} />TPS</span>
-              <span className="text-mc-green font-mono font-bold">{serverInfo.tps} / 20</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#7D8590] flex items-center gap-2"><Clock size={13} />Uptime</span>
-              <span className="text-white font-mono">{serverInfo.uptime}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#7D8590] flex items-center gap-2"><Zap size={13} />Version</span>
-              <span className="text-mc-diamond font-mono">{serverInfo.version}</span>
-            </div>
-          </div>
+          ) : (
+            <div className="text-center py-6 text-[#3D444D] text-xs">Chargement...</div>
+          )}
         </div>
 
         {/* Projects progress */}
@@ -94,7 +114,7 @@ export function Overview() {
             <h3 className="text-white font-semibold">Avancement des Projets</h3>
           </div>
           <div className="space-y-4">
-            {projects.map(project => (
+            {projectList.map(project => (
               <div key={project.id}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
@@ -106,6 +126,7 @@ export function Overview() {
                 <ProgressBar value={project.progress} />
               </div>
             ))}
+            {projectList.length === 0 && <div className="text-center py-6 text-[#3D444D] text-xs">Chargement...</div>}
           </div>
         </div>
       </div>
@@ -117,7 +138,7 @@ export function Overview() {
           <h3 className="text-white font-semibold">Dernières Mises à Jour</h3>
         </div>
         <div className="space-y-3">
-          {changelog.slice(0, 4).map(entry => (
+          {changelogData.slice(0, 4).map(entry => (
             <div key={entry.id} className="flex items-start gap-4 p-3 bg-[#0D1117] rounded border border-[#21262D] hover:border-[#30363D] transition-colors">
               <div className={`text-xs px-2 py-0.5 rounded font-mono font-bold mt-0.5 ${
                 entry.type === 'hotfix' ? 'bg-red-900/30 text-mc-redstone border border-mc-redstone/30' :
@@ -136,6 +157,7 @@ export function Overview() {
               </div>
             </div>
           ))}
+          {changelogData.length === 0 && <div className="text-center py-6 text-[#3D444D] text-xs">Chargement...</div>}
         </div>
       </div>
     </div>

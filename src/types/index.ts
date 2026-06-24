@@ -15,22 +15,28 @@ export interface Project {
   mcVersion: string;
   assignees: string[];
   tags: string[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
   tasks: Task[];
-  githubUrl?: string;
+  githubUrl?: string | null;
+  github_url?: string | null;
 }
 
 export interface Task {
   id: string;
   projectId: string;
+  project_id?: string;
+  projectName?: string;
   title: string;
   description: string;
   status: TaskStatus;
   priority: Priority;
   assignee?: string;
   dueDate?: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
   labels: string[];
 }
 
@@ -40,11 +46,10 @@ export interface ChangelogEntry {
   date: string;
   type: 'major' | 'minor' | 'patch' | 'hotfix';
   projectId: string;
+  project_id?: string;
   projectName: string;
-  changes: {
-    type: 'added' | 'changed' | 'fixed' | 'removed' | 'security';
-    description: string;
-  }[];
+  project_name?: string;
+  changes: { type: 'added' | 'changed' | 'fixed' | 'removed' | 'security'; description: string }[];
 }
 
 export interface TeamMember {
@@ -55,6 +60,7 @@ export interface TeamMember {
   color: string;
   activeTasks: number;
   completedProjects: number;
+  assignedProjects?: number;
 }
 
 export interface ServerInfo {
@@ -65,4 +71,27 @@ export interface ServerInfo {
   uptime: string;
   tps: number;
   ram: { used: number; max: number };
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: 'admin' | 'developer' | 'viewer';
+  displayRole: string;
+  avatar: string;
+  color: string;
+  mustChangePw: boolean;
+}
+
+export interface AppUser {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  display_role: string;
+  avatar: string;
+  color: string;
+  must_change_pw: number;
+  last_login: string | null;
+  created_at: string;
 }
