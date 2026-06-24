@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle2, Circle, Clock, Eye, Plus, Pencil, Trash2, X,
   Calendar, Search,
@@ -321,6 +321,7 @@ export function Tasks() {
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
+  const dropTargetRef = useRef<TaskStatus | null>(null);
 
   useEffect(() => {
     tasksApi.list().then(setAllTasks).catch(() => {});
@@ -379,13 +380,19 @@ export function Tasks() {
     setDetail(null);
   }
 
-  async function handleDrop(status: TaskStatus) {
-    if (!draggingId || !canEdit) return;
-    const task = allTasks.find(t => t.id === draggingId);
+  function handleDragEnd() {
+    const status = dropTargetRef.current;
+    const taskId = draggingId;
+    dropTargetRef.current = null;
+    setDraggingId(null);
+    setDragOverCol(null);
+    if (!status || !taskId || !canEdit) return;
+    const task = allTasks.find(t => t.id === taskId);
     if (!task || task.status === status) return;
-    setAllTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status } : t));
-    try { await tasksApi.update(draggingId, { status }); }
-    catch { setAllTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: task.status } : t)); }
+    setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+    tasksApi.update(taskId, { status }).catch(() => {
+      setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: task.status } : t));
+    });
   }
 
   return (
@@ -443,8 +450,8 @@ export function Tasks() {
                 isTarget ? '' : 'border-[#21262D]'
               }`}
               style={isTarget ? { borderColor: `${col.color}60`, backgroundColor: `${col.color}06` } : {}}
-              onDragOver={e => { e.preventDefault(); setDragOverCol(col.status); }}
-              onDrop={e => { e.preventDefault(); handleDrop(col.status); }}
+              onDragOver={e => { e.preventDefault(); dropTargetRef.current = col.status; setDragOverCol(col.status); }}
+              onDrop={e => { e.preventDefault(); }}
             >
               {/* Column header */}
               <div className="px-4 py-3 border-b border-[#21262D] flex items-center gap-2 bg-[#161B22]"
@@ -469,7 +476,7 @@ export function Tasks() {
                   <TaskCard key={task.id} task={task} members={members} canEdit={canEdit}
                     isDragging={draggingId === task.id}
                     onDragStart={() => setDraggingId(task.id)}
-                    onDragEnd={() => { setDraggingId(null); setDragOverCol(null); }}
+                    onDragEnd={handleDragEnd}
                     onClick={() => setDetail(task)}
                     onEdit={() => { setEditing(task); setDetail(null); }}
                     onDelete={() => setDeleting(task)}
