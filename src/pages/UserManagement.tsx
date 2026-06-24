@@ -188,8 +188,8 @@ export function UserManagement() {
         </button>
       </div>
 
-      <div className="mc-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="mc-card overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-[#21262D]">
               {['Utilisateur', 'Rôle', 'Email', 'Dernière connexion', 'Créé le', ''].map(h => (

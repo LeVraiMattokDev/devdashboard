@@ -20,14 +20,15 @@ const adminItems = [
   { to: '/settings', icon: Settings2, label: 'Paramètres',   color: 'mc-gold' },
 ];
 
-function NavItem({ to, icon: Icon, label, accentColor = 'mc-green' }: {
-  to: string; icon: React.ElementType; label: string; accentColor?: string;
+function NavItem({ to, icon: Icon, label, accentColor = 'mc-green', onClick }: {
+  to: string; icon: React.ElementType; label: string; accentColor?: string; onClick?: () => void;
 }) {
   return (
     <li>
       <NavLink
         to={to}
         end={to === '/'}
+        onClick={onClick}
         className={({ isActive }) =>
           `flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-all duration-150 group
           ${isActive
@@ -48,12 +49,12 @@ function NavItem({ to, icon: Icon, label, accentColor = 'mc-green' }: {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const { user } = useAuth();
   const { settings } = useSettings();
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-[#0D1117] border-r border-[#21262D] flex flex-col z-50">
+    <aside className={`fixed left-0 top-0 h-screen w-64 bg-[#0D1117] border-r border-[#21262D] flex flex-col z-50 transition-transform duration-200 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
       {/* Logo */}
       <div className="px-6 py-5 border-b border-[#21262D]">
         <div className="flex items-center gap-3">
@@ -79,7 +80,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <p className="text-[#5DA832] text-xs font-semibold tracking-widest px-3 mb-3 uppercase">Navigation</p>
         <ul className="space-y-1">
-          {navItems.map(item => <NavItem key={item.to} {...item} />)}
+          {navItems.map(item => <NavItem key={item.to} {...item} onClick={onClose} />)}
         </ul>
 
         {user?.role === 'admin' && (
@@ -87,7 +88,7 @@ export function Sidebar() {
             <p className="text-[#7D8590] text-xs font-semibold tracking-widest px-3 mt-6 mb-3 uppercase">Administration</p>
             <ul className="space-y-1">
               {adminItems.map(item => (
-                <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} accentColor={item.color} />
+                <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} accentColor={item.color} onClick={onClose} />
               ))}
             </ul>
           </>

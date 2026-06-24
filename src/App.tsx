@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -24,12 +25,16 @@ const pageConfig: Record<string, { title: string; subtitle: string }> = {
 };
 
 function Layout({ children, path }: { children: React.ReactNode; path: string }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const config = pageConfig[path] || { title: 'Dashboard', subtitle: '' };
   return (
     <div className="flex min-h-screen bg-[#0D1117]">
-      <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <Header title={config.title} subtitle={config.subtitle} />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen min-w-0">
+        <Header title={config.title} subtitle={config.subtitle} onMenuToggle={() => setSidebarOpen(v => !v)} />
         <main className="flex-1 overflow-auto">
           {children}
         </main>

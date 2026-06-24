@@ -1,4 +1,4 @@
-import { LogOut, KeyRound, UserCircle } from 'lucide-react';
+import { LogOut, KeyRound, UserCircle, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../api';
@@ -7,6 +7,7 @@ import { Avatar } from './Avatar';
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  onMenuToggle?: () => void;
 }
 
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
@@ -81,7 +82,8 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 
 function EditProfileModal({ onClose }: { onClose: () => void }) {
   const { user, updateUser } = useAuth();
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar ?? '');
+  const av = user?.avatar ?? '';
+  const [avatarUrl, setAvatarUrl] = useState(/^https?:\/\//.test(av) ? av : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -153,7 +155,7 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function Header({ title, subtitle }: HeaderProps) {
+export function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
@@ -162,10 +164,15 @@ export function Header({ title, subtitle }: HeaderProps) {
   const initials = user?.username.slice(0, 2).toUpperCase() ?? '??';
 
   return (
-    <header className="h-14 border-b border-[#21262D] flex items-center justify-between px-6 bg-[#0D1117]/80 backdrop-blur sticky top-0 z-40">
-      <div>
-        <h1 className="text-white font-semibold text-base">{title}</h1>
-        {subtitle && <p className="text-[#7D8590] text-xs mt-0.5">{subtitle}</p>}
+    <header className="h-14 border-b border-[#21262D] flex items-center justify-between px-4 md:px-6 bg-[#0D1117]/80 backdrop-blur sticky top-0 z-40">
+      <div className="flex items-center gap-3">
+        <button onClick={onMenuToggle} className="lg:hidden p-1.5 text-[#7D8590] hover:text-white transition-colors">
+          <Menu size={18} />
+        </button>
+        <div>
+          <h1 className="text-white font-semibold text-base">{title}</h1>
+          {subtitle && <p className="text-[#7D8590] text-xs mt-0.5 hidden sm:block">{subtitle}</p>}
+        </div>
       </div>
 
       {user && (

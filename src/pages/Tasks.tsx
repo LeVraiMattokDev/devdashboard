@@ -391,7 +391,7 @@ export function Tasks() {
   }
 
   return (
-    <div className="p-6 flex flex-col gap-5">
+    <div className="p-4 md:p-6 flex flex-col gap-5">
       {/* Filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative min-w-52 flex-1">
@@ -434,14 +434,14 @@ export function Tasks() {
       </div>
 
       {/* Kanban */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-6 md:px-6">
         {COLS.map(col => {
           const colTasks = filtered.filter(t => t.status === col.status);
           const isTarget = dragOverCol === col.status && !!draggingId;
 
           return (
             <div key={col.status}
-              className={`flex flex-col rounded-lg border transition-colors duration-150 overflow-hidden ${
+              className={`flex-shrink-0 w-72 xl:flex-1 xl:min-w-[240px] flex flex-col rounded-lg border transition-colors duration-150 overflow-hidden ${
                 isTarget ? '' : 'border-[#21262D]'
               }`}
               style={isTarget ? { borderColor: `${col.color}60`, backgroundColor: `${col.color}06` } : {}}
